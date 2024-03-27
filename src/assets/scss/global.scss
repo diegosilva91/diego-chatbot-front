@@ -1,0 +1,55 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import '../node_modules/bootstrap/scss/bootstrap.scss';
+
+.card-chat{
+    height: 500px;
+    border-radius: 15px !important;
+    background-color: rgba(0,0,0,0.4) !important;
+}
+.container{
+    .row{
+        background: $purple;
+        background: -webkit-linear-gradient(to right,$cyan, $blue, $purple);
+        background: linear-gradient(to right, $cyan, $blue,$purple);
+        border-radius: 25px;
+    }
+}
+.img_cont{
+    position: relative;
+    height: 70px;
+    width: 70px;
+}
+.user_img{
+    height: 70px;
+    width: 70px;
+    border:1.5px solid #f5f6fa;
+
+}
+.user_info{
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 15px;
+    .user_info p{
+        font-size: 10px;
+        color: $silver;
+    }
+}
+.online_icon{
+    position: absolute;
+    height: 15px;
+    width:15px;
+    background-color: #4cd137;
+    border-radius: 50%;
+    bottom: 0.2em;
+    right: 0.4em;
+    border:1.5px solid white;
+}
+.offline{
+    background-color: #c23616 !important;
+}
