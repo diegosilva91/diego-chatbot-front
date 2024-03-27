@@ -51,7 +51,7 @@ export default {
   setup() {
     const answer = ref("I cannot give you an answer until you ask a question!");
     const status_message = ref("online");
-    const status_chat = ref(true);
+    const status_chat = ref(false);
     const sessionToken = ref("");
     const sessionId = ref("");
     const messages = ref("");
