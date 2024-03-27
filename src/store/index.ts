@@ -1,4 +1,4 @@
-import {useChatStore} from "./chat";
+import { useChatStore } from "./chat";
 export const API = {
-    chat: useChatStore,
+  chat: useChatStore,
 };
