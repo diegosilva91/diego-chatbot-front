@@ -10,7 +10,7 @@
           <div class="msg_cotainer_send" v-html="message"></div>
           <div class="img_cont_msg">
             <img
-              :src="mixAssetUrl + '/images/gOr7e1Qaxlh89FlAKz3t.jpg'"
+              :src="'/images/gOr7e1Qaxlh89FlAKz3t.jpg'"
               class="rounded-circle user_img_msg"
             />
           </div>
@@ -89,7 +89,7 @@ export default {
   },
   data() {
     return {
-      mixAssetUrl: process.env.MIX_ASSET_URL,
+      mixAssetUrl: process.env.VUE_APP_ASSET_URL,
       messages: [],
       messagesBot: [],
       id: 0,
