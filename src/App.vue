@@ -12,7 +12,7 @@
                 />
                 <span
                   class="online_icon"
-                  :class="{ offline: !status_chat }"
+                  :class="{ offline: status_chat }"
                 ></span>
               </div>
               <div class="user_info">
