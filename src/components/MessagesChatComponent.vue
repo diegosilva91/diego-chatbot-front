@@ -10,7 +10,7 @@
           <div class="msg_cotainer_send" v-html="message"></div>
           <div class="img_cont_msg">
             <img
-              :src="'/images/gOr7e1Qaxlh89FlAKz3t.jpg'"
+              :src="'/img/gOr7e1Qaxlh89FlAKz3t.jpg'"
               class="rounded-circle user_img_msg"
             />
           </div>
