@@ -40,13 +40,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import axios from "axios";
+import { defineComponent, getCurrentInstance, ref } from "vue";
+import api from "@/services/api";
 
 export default defineComponent({
   props: ["session_id", "session_token"],
   emits: ["messagesent"],
   setup(props, { emit }) {
+    const instance = getCurrentInstance();
+    const emitter = instance?.proxy?.emitter as
+      | {
+          emit: (event: string, payload?: unknown) => void;
+        }
+      | undefined;
+
     const question = ref("");
     const sessionToken = ref(props.session_token || "");
     const sessionId = ref(props.session_id || "");
@@ -60,29 +67,26 @@ export default defineComponent({
       showSuggestions.value = false;
     };
 
-    const sendAsk = async function (this: any, e: Event) {
+    const sendAsk = async (e: Event) => {
       e.preventDefault();
       if (question.value.length === 0) return;
 
       showSuggestions.value = false;
-      this.emitter.emit("messagesent", this.question);
+      emitter?.emit("messagesent", question.value);
       emit("messagesent", true);
 
       try {
-        const response = await axios.post(
-          `${process.env.VUE_APP_BACK_URL}/api/conversation`,
-          {
-            sessionToken: sessionToken.value,
-            sessionId: sessionId.value,
-            message: question.value,
-            counters: counter.value,
-          }
-        );
+        const response = await api.post("/api/conversation", {
+          sessionToken: sessionToken.value,
+          sessionId: sessionId.value,
+          message: question.value,
+          counters: counter.value,
+        });
         sessionToken.value = response.data.sessionToken;
         sessionId.value = response.data.sessionId;
         counter.value =
           response.data.counters >= 1 ? response.data.counters : "";
-        this.emitter.emit("messagesSendBot", response.data);
+        emitter?.emit("messagesSendBot", response.data);
         emit("messagesent", false);
       } catch (error) {
         console.error("Error:", error);
