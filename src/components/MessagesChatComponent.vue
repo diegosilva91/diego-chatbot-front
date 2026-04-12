@@ -1,13 +1,13 @@
 <template>
-  <div class="card-body msg_card_body">
+  <div class="card-body msg_card_body" ref="messagesContainer">
     <div v-for="message in messages" :key="message.id">
       <div v-if="idSender === message.idSender">
         <div
-          v-for="message in orderMessages(message.messages)"
-          :key="message.id"
-          class="d-flex justify-content-end mb-4"
+          v-for="(msg, index) in orderMessages(message.messages)"
+          :key="index"
+          class="message-wrapper user-message"
         >
-          <div class="msg_cotainer_send" v-html="message"></div>
+          <div class="msg_cotainer_send" v-html="msg"></div>
           <div class="img_cont_msg">
             <img
               :src="require(`@/assets/images/gOr7e1Qaxlh89FlAKz3t.jpg`)"
@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      <div v-else class="d-flex justify-content-start mb-4">
+      <div v-else class="message-wrapper bot-message">
         <div class="img_cont_msg">
           <img
             src="https://2.bp.blogspot.com/-8ytYF7cfPkQ/WkPe1-rtrcI/AAAAAAAAGqU/FGfTDVgkcIwmOTtjLka51vineFBExJuSACLcBGAs/s320/31.jpg"
@@ -29,6 +29,12 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showTyping" class="typing-indicator">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -36,15 +42,20 @@ export default {
   props: ["history_messages"],
   methods: {
     orderMessages: function (message) {
-      //console.log(message)
       return message.map((element) => element);
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const container = this.$refs.messagesContainer as HTMLElement;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
     },
   },
   mounted() {
-    //console.log("history",vm.history_messages)
     if (this.history_messages && this.history_messages.length > 0)
-      this.history_messages.forEach((element) => {
-        //console.log(element)
+      this.history_messages.forEach((element: any) => {
         if (element.user === "user") {
           let message = {
             id: this.id++,
@@ -61,76 +72,167 @@ export default {
           this.messages.push(messageBot);
           this.idSender = element.sessionId ? element.sessionId : "";
         }
-        //console.log(vm.messages)
       });
-    this.emitter.on("messagesent", (messageWrite) => {
+
+    this.emitter.on("messagesent", (messageWrite: string) => {
+      this.showTyping = true;
       let message = {
         id: this.id++,
         message: messageWrite,
         idSender: this.id,
       };
       this.messages.push(message);
+      this.scrollToBottom();
     });
-    this.emitter.on("messagesSendBot", (messageWriteBot) => {
-      //console.log("answers",messageWriteBot.answers)
-      // console.log("Sesionid",messageWriteBot.sessionId,vm.idSender)
+
+    this.emitter.on("messagesSendBot", (messageWriteBot: any) => {
       this.idSender = messageWriteBot.sessionId;
-      //console.log("arrow",messageWriteBot.answers.reduce((element) => (element)))
-      let answerBot = messageWriteBot.answers; //.reduce((element) => (element.message))
+      let answerBot = messageWriteBot.answers;
       let messageBot = {
         id: this.id++,
         messages: answerBot,
         idSender: messageWriteBot.sessionId,
       };
       this.messages.push(messageBot);
-      // console.log("idSender",vm.idSender)
-      // console.log("messages",this.messages);
+      this.showTyping = false;
+      this.scrollToBottom();
     });
   },
   data() {
     return {
       mixAssetUrl: process.env.VUE_APP_ASSET_URL,
-      messages: [],
+      messages: [] as any[],
       messagesBot: [],
       id: 0,
       idSender: "",
+      showTyping: false,
     };
   },
 };
 </script>
 <style scoped>
+.msg_card_body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #fafbfc;
+}
+
+.message-wrapper {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-message {
+  justify-content: flex-end;
+}
+
+.bot-message {
+  justify-content: flex-start;
+}
+
 .img_cont_msg {
-  height: 40px;
-  width: 40px;
+  height: 36px;
+  width: 36px;
+  flex-shrink: 0;
 }
 
 .user_img_msg {
-  height: 40px;
-  width: 40px;
-  border: 1.5px solid #f5f6fa;
+  height: 36px;
+  width: 36px;
+  border: 2px solid #e2e8f0;
+  object-fit: cover;
 }
 
 .msg_cotainer {
-  margin-top: auto;
-  margin-bottom: auto;
   margin-left: 10px;
-  border-radius: 25px;
-  background-color: #82ccdd;
-  padding: 10px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  max-width: 80%;
+  font-size: 0.9rem;
+  line-height: 1.5;
   position: relative;
+}
+
+.msg_cotainer::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  border: 6px solid transparent;
+  border-right-color: #f1f5f9;
 }
 
 .msg_cotainer_send {
-  margin-top: auto;
-  margin-bottom: auto;
   margin-right: 10px;
-  border-radius: 25px;
-  background-color: #78e08f;
-  padding: 10px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  max-width: 80%;
+  font-size: 0.9rem;
+  line-height: 1.5;
   position: relative;
 }
 
-.msg_card_body {
-  overflow-y: auto;
+.msg_cotainer_send::before {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 8px;
+  border: 6px solid transparent;
+  border-left-color: #22c55e;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  margin-left: 46px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
 }
 </style>

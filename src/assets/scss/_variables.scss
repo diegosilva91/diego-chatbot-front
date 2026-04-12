@@ -1,20 +1,35 @@
 // Body
-$body-bg: #f8fafc;
+$body-bg: #f0f4f8;
 
 // Typography
-$font-family-sans-serif: 'Nunito', sans-serif;
-$font-size-base: 0.9rem;
+$font-family-sans-serif: "Nunito", sans-serif;
+$font-size-base: 0.95rem;
 $line-height-base: 1.6;
 
-// Colors
-$blue: #3490dc;
-$indigo: #6574cd;
-$purple: #9561e2;
-$pink: #f66d9b;
-$red: #e3342f;
-$orange: #f6993f;
-$yellow: #ffed4a;
-$green: #38c172;
-$teal: #4dc0b5;
-$cyan: #6cb2eb;
-$silver:  #C0C0C0;
+// Colors - Modern Palette
+$primary: #6366f1;
+$secondary: #8b5cf6;
+$blue: #3b82f6;
+$indigo: #6366f1;
+$purple: #8b5cf6;
+$pink: #ec4899;
+$red: #ef4444;
+$orange: #f97316;
+$yellow: #eab308;
+$green: #22c55e;
+$teal: #14b8a6;
+$cyan: #06b6d4;
+$silver: #94a3b8;
+
+// Chat specific
+$chat-bg: rgba(255, 255, 255, 0.95);
+$chat-header-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+$message-user: #22c55e;
+$message-bot: #f1f5f9;
+$message-bot-text: #1e293b;
+$online: #22c55e;
+$offline: #ef4444;
+
+// Shadows
+$shadow-soft: 0 4px 20px rgba(99, 102, 241, 0.15);
+$shadow-medium: 0 8px 30px rgba(99, 102, 241, 0.2);

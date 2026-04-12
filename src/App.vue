@@ -1,37 +1,41 @@
 <template>
   <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card card-chat">
-          <div class="card-header text-white">
-            <div class="d-flex bd-highlight">
-              <div class="img_cont">
-                <img
-                  src="./assets/images/gOr7e1Qaxlh89FlAKz3t.jpg"
-                  class="rounded-circle user_img"
-                />
-                <span
-                  class="online_icon"
-                  :class="{ offline: status_chat }"
-                ></span>
-              </div>
-              <div class="user_info">
-                <h1>Diego ChatBot</h1>
-                <p>{{ status_message }}</p>
-              </div>
-            </div>
+    <div class="card card-chat">
+      <div class="card-header text-white">
+        <div class="d-flex bd-highlight">
+          <div class="img_cont">
+            <img
+              src="./assets/images/gOr7e1Qaxlh89FlAKz3t.jpg"
+              class="rounded-circle user_img"
+            />
+            <span class="online_icon" :class="{ offline: status_chat }"></span>
           </div>
-          <MessagesChatComponent
-            :history_messages="messages"
-            :session_token="sessionToken"
-            :session_id="sessionId"
-          ></MessagesChatComponent>
-          <FormChatComponent
-            :session_id="sessionId"
-            :session_token="sessionToken"
-          ></FormChatComponent>
+          <div class="user_info">
+            <h1>Diego ChatBot</h1>
+            <p>{{ status_message }}</p>
+          </div>
         </div>
       </div>
+
+      <div class="bot-info">
+        <div class="bot-info-title">Habilidades</div>
+        <div class="bot-skills">
+          <span class="skill-tag">Asistente IA</span>
+          <span class="skill-tag">Responder preguntas</span>
+          <span class="skill-tag">Conversación</span>
+        </div>
+      </div>
+
+      <MessagesChatComponent
+        :history_messages="messages"
+        :session_token="sessionToken"
+        :session_id="sessionId"
+      ></MessagesChatComponent>
+      <FormChatComponent
+        :session_id="sessionId"
+        :session_token="sessionToken"
+        @messagesent="handleMessageSent"
+      ></FormChatComponent>
     </div>
   </div>
 </template>
@@ -49,12 +53,12 @@ export default {
     FormChatComponent,
   },
   setup() {
-    const answer = ref("I cannot give you an answer until you ask a question!");
     const status_message = ref("online");
     const status_chat = ref(false);
     const sessionToken = ref("");
     const sessionId = ref("");
     const messages = ref("");
+    const isTyping = ref(false);
 
     const store = useChatStore();
 
@@ -65,23 +69,25 @@ export default {
         sessionId.value = response.sessionId;
         status_message.value = response.status_message;
         status_chat.value = response.status_chat;
-        // counter.value = response.counters >= 1 ? response.counters : "";
-        answer.value = "writing...";
-        // question.value = "";
       } catch (error) {
-        answer.value = "Error! Could not reach the API. " + error;
+        status_message.value = "offline";
       }
+    };
+
+    const handleMessageSent = (writing: boolean) => {
+      isTyping.value = writing;
     };
 
     onMounted(loadChat);
 
     return {
-      answer,
       status_message,
       sessionToken,
       sessionId,
       messages,
       status_chat,
+      isTyping,
+      handleMessageSent,
     };
   },
 };
