@@ -40,19 +40,23 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, ref } from "vue";
-import api from "@/services/api";
+import { defineComponent, getCurrentInstance, ref, watch } from "vue";
+import { backendApi, chatterwillyApi } from "@/services/api";
 
 export default defineComponent({
-  props: ["session_id", "session_token"],
+  props: ["session_id", "session_token", "reset_token", "assistant_id"],
   emits: ["messagesent"],
   setup(props, { emit }) {
     const instance = getCurrentInstance();
-    const emitter = instance?.proxy?.emitter as
-      | {
-          emit: (event: string, payload?: unknown) => void;
-        }
-      | undefined;
+    const emitter = (
+      instance?.proxy as
+        | {
+            emitter?: {
+              emit: (event: string, payload?: unknown) => void;
+            };
+          }
+        | undefined
+    )?.emitter;
 
     const question = ref("");
     const sessionToken = ref(props.session_token || "");
@@ -61,6 +65,31 @@ export default defineComponent({
     const showSuggestions = ref(true);
 
     const suggestions = ["Hola", "¿Quién eres?", "¿Qué puedes hacer?", "Ayuda"];
+
+    watch(
+      () => props.session_token,
+      (value) => {
+        sessionToken.value = value || "";
+      }
+    );
+
+    watch(
+      () => props.session_id,
+      (value) => {
+        sessionId.value = value || "";
+      }
+    );
+
+    watch(
+      () => props.reset_token,
+      () => {
+        counter.value = "";
+        question.value = "";
+        showSuggestions.value = true;
+      }
+    );
+
+    const isChatterwilly = () => props.assistant_id === "chatterwilly";
 
     const useSuggestion = (text: string) => {
       question.value = text;
@@ -76,19 +105,27 @@ export default defineComponent({
       emit("messagesent", true);
 
       try {
-        const response = await api.post("/api/conversation", {
-          sessionToken: sessionToken.value,
-          sessionId: sessionId.value,
-          message: question.value,
-          counters: counter.value,
-        });
-        sessionToken.value = response.data.sessionToken;
-        sessionId.value = response.data.sessionId;
-        counter.value =
-          response.data.counters >= 1 ? response.data.counters : "";
-        emitter?.emit("messagesSendBot", response.data);
+        const response = isChatterwilly()
+          ? await chatterwillyApi.post("/chat", {
+              text: question.value,
+            })
+          : await backendApi.post("/conversation", {
+              sessionToken: sessionToken.value,
+              sessionId: sessionId.value,
+              message: question.value,
+              counters: counter.value,
+            });
+        const payload = response.data?.content ?? response.data ?? {};
+        if (!isChatterwilly()) {
+          sessionToken.value =
+            payload.sessionToken || payload.session_token || "";
+          sessionId.value = payload.sessionId || payload.sessionID || "";
+          counter.value = payload.counters >= 1 ? payload.counters : "";
+        }
+        emitter?.emit("messagesSendBot", payload);
         emit("messagesent", false);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error:", error);
         emit("messagesent", false);
       }

@@ -1,4 +1,4 @@
-import http from "../../services/api";
+import { backendApi } from "../../services/api";
 import { APIResponse } from "../../services/type";
 import { ChatInfo } from "../type";
 import { defineStore } from "pinia";
@@ -14,12 +14,21 @@ export const useChatStore = defineStore({
     },
     async getChatInfo() {
       try {
-        const response = await http.get<APIResponse<ChatInfo>>(
-          "/api/messages/recent"
+        const response = await backendApi.get<APIResponse<ChatInfo> | ChatInfo>(
+          "/messages/recent"
         );
-        this.chatInfo = response.data;
+        const content =
+          response.data && "content" in response.data
+            ? response.data.content
+            : (response.data as ChatInfo);
+
+        this.chatInfo = content;
+
+        return content;
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error fetching chat info:", error);
+        return null;
       }
     },
   },

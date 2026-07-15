@@ -3,16 +3,13 @@
     <div v-for="message in messages" :key="message.id">
       <div v-if="idSender === message.idSender">
         <div
-          v-for="(msg, index) in orderMessages(message.messages)"
+          v-for="(msg, index) in orderMessages(message.messages || [])"
           :key="index"
           class="message-wrapper user-message"
         >
           <div class="msg_cotainer_send" v-html="msg"></div>
           <div class="img_cont_msg">
-            <img
-              :src="require(`@/assets/images/gOr7e1Qaxlh89FlAKz3t.jpg`)"
-              class="rounded-circle user_img_msg"
-            />
+            <img :src="userAvatar" class="rounded-circle user_img_msg" />
           </div>
         </div>
       </div>
@@ -38,10 +35,73 @@
   </div>
 </template>
 <script lang="ts">
+import userAvatar from "@/assets/images/gOr7e1Qaxlh89FlAKz3t.jpg";
+
+type HistoryMessage = {
+  user?: string;
+  message: string | unknown[];
+  sessionId?: string;
+};
+
+type BotMessagePayload = {
+  sessionId?: string;
+  answers: unknown[];
+};
+
+type ChatBubble = {
+  id: number;
+  idSender: string | number;
+  message?: string;
+  messages?: unknown[];
+};
+
 export default {
-  props: ["history_messages"],
+  props: ["history_messages", "reset_token"],
+  watch: {
+    history_messages: {
+      handler(newMessages: HistoryMessage[]) {
+        if (newMessages && newMessages.length > 0) {
+          this.resetMessages();
+          this.hydrateHistoryMessages(newMessages);
+        }
+      },
+      deep: true,
+    },
+    reset_token() {
+      this.resetMessages();
+    },
+  },
   methods: {
-    orderMessages: function (message) {
+    resetMessages() {
+      this.messages = [];
+      this.messagesBot = [];
+      this.id = 0;
+      this.idSender = "";
+      this.showTyping = false;
+    },
+    hydrateHistoryMessages(historyMessages: HistoryMessage[]) {
+      historyMessages.forEach((element) => {
+        if (element.user === "user") {
+          const message: ChatBubble = {
+            id: this.id++,
+            message: String(element.message),
+            idSender: this.id,
+          };
+          this.messages.push(message);
+        } else {
+          const messageBot: ChatBubble = {
+            id: this.id++,
+            messages: Array.isArray(element.message)
+              ? element.message
+              : [String(element.message)],
+            idSender: element.sessionId,
+          };
+          this.messages.push(messageBot);
+          this.idSender = element.sessionId ? element.sessionId : "";
+        }
+      });
+    },
+    orderMessages(message: unknown[]) {
       return message.map((element) => element);
     },
     scrollToBottom() {
@@ -54,25 +114,9 @@ export default {
     },
   },
   mounted() {
-    if (this.history_messages && this.history_messages.length > 0)
-      this.history_messages.forEach((element: any) => {
-        if (element.user === "user") {
-          let message = {
-            id: this.id++,
-            message: element.message,
-            idSender: this.id,
-          };
-          this.messages.push(message);
-        } else {
-          let messageBot = {
-            id: this.id++,
-            messages: element.message,
-            idSender: element.sessionId,
-          };
-          this.messages.push(messageBot);
-          this.idSender = element.sessionId ? element.sessionId : "";
-        }
-      });
+    if (this.history_messages && this.history_messages.length > 0) {
+      this.hydrateHistoryMessages(this.history_messages);
+    }
 
     this.emitter.on("messagesent", (messageWrite: string) => {
       this.showTyping = true;
@@ -85,13 +129,13 @@ export default {
       this.scrollToBottom();
     });
 
-    this.emitter.on("messagesSendBot", (messageWriteBot: any) => {
-      this.idSender = messageWriteBot.sessionId;
+    this.emitter.on("messagesSendBot", (messageWriteBot: BotMessagePayload) => {
+      this.idSender = messageWriteBot.sessionId || "";
       let answerBot = messageWriteBot.answers;
-      let messageBot = {
+      const messageBot: ChatBubble = {
         id: this.id++,
         messages: answerBot,
-        idSender: messageWriteBot.sessionId,
+        idSender: messageWriteBot.sessionId || "",
       };
       this.messages.push(messageBot);
       this.showTyping = false;
@@ -101,7 +145,8 @@ export default {
   data() {
     return {
       mixAssetUrl: process.env.VUE_APP_ASSET_URL,
-      messages: [] as any[],
+      userAvatar,
+      messages: [] as ChatBubble[],
       messagesBot: [],
       id: 0,
       idSender: "",

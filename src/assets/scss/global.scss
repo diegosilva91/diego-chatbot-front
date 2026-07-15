@@ -4,17 +4,20 @@
 // Variables
 @import "variables";
 
-// Bootstrap
-@import "~bootstrap/scss/bootstrap";
-
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 html,
 body {
   min-height: 100vh;
   background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 50%, #f0f4f8 100%);
+  margin: 0;
+  font-family: $font-family-sans-serif;
 }
 
 .container {
@@ -23,6 +26,40 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.bd-highlight {
+  align-items: center;
+}
+
+.text-white {
+  color: #fff;
+}
+
+.card {
+  border: 0;
+  border-radius: 24px;
+}
+
+.card-header,
+.card-body,
+.card-footer {
+  display: block;
+}
+
+.rounded-circle {
+  border-radius: 9999px;
+}
+
+.form-control {
+  width: 100%;
+  border: 0;
+  background: #fff;
+  color: #0f172a;
 }
 
 .card-chat {
@@ -108,10 +145,6 @@ body {
     color: rgba(255, 255, 255, 0.85);
     margin: 4px 0 0;
   }
-}
-
-.bd-highlight {
-  align-items: center;
 }
 
 // Bot info section
