@@ -43,6 +43,46 @@ describe("FormChatComponent", () => {
     expect(wrapper.emitted("messagesent")).toEqual([[true], [false]]);
   });
 
+  it("allows sending more than one chatterwilly message", async () => {
+    (chatterwillyApi.post as jest.Mock).mockResolvedValue({
+      data: {
+        content: { text: "Respuesta" },
+      },
+    });
+
+    const wrapper = shallowMount(FormChatComponent, {
+      props: {
+        session_id: "",
+        session_token: "",
+        reset_token: 0,
+        assistant_id: "chatterwilly",
+      },
+    });
+
+    const input = wrapper.find("#InputQuestion");
+
+    await input.setValue("Hola");
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    await input.setValue("¿Qué puedes hacer?");
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(chatterwillyApi.post).toHaveBeenNthCalledWith(1, "/chat", {
+      text: "Hola",
+    });
+    expect(chatterwillyApi.post).toHaveBeenNthCalledWith(2, "/chat", {
+      text: "¿Qué puedes hacer?",
+    });
+    expect(wrapper.emitted("messagesent")).toEqual([
+      [true],
+      [false],
+      [true],
+      [false],
+    ]);
+  });
+
   it("posts to the backend conversation endpoint when the assistant is diego", async () => {
     (backendApi.post as jest.Mock).mockResolvedValue({
       data: {

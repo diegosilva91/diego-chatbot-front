@@ -1,24 +1,21 @@
 <template>
   <div class="card-body msg_card_body" ref="messagesContainer">
     <div v-for="message in messages" :key="message.id">
-      <div v-if="message.message" class="message-wrapper user-message">
+      <div v-if="message.role === 'user'" class="message-wrapper user-message">
         <div class="msg_cotainer_send">
-          {{ message.message }}
+          {{ message.text }}
         </div>
         <div class="img_cont_msg">
-          <img :src="userAvatar" class="rounded-circle user_img_msg" />
+          <img :src="userAvatarSrc()" class="rounded-circle user_img_msg" />
         </div>
       </div>
 
       <div v-else class="message-wrapper bot-message">
         <div class="img_cont_msg">
-          <img
-            src="https://2.bp.blogspot.com/-8ytYF7cfPkQ/WkPe1-rtrcI/AAAAAAAAGqU/FGfTDVgkcIwmOTtjLka51vineFBExJuSACLcBGAs/s320/31.jpg"
-            class="rounded-circle user_img_msg"
-          />
+          <img :src="botAvatarSrc()" class="rounded-circle user_img_msg" />
         </div>
         <div class="msg_cotainer">
-          {{ renderBotMessage(message) }}
+          {{ message.text }}
         </div>
       </div>
     </div>
@@ -42,14 +39,20 @@ type HistoryMessage = {
 type BotMessagePayload = {
   sessionId?: string;
   answers: unknown[];
+  response?: string;
+  message?: string;
+  text?: string;
 };
 
 type ChatBubble = {
   id: number;
-  idSender?: string | number;
-  message?: string;
-  messages?: unknown[];
+  role: "user" | "bot";
+  text: string;
 };
+
+const CHATTERWILLY_BOT_AVATAR =
+  "https://2.bp.blogspot.com/-8ytYF7cfPkQ/WkPe1-rtrcI/AAAAAAAAGqU/FGfTDVgkcIwmOTtjLka51vineFBExJuSACLcBGAs/s320/31.jpg";
+const CHATTERWILLY_USER_AVATAR = "/chatterwilly-user-avatar.svg";
 
 export default {
   props: ["history_messages", "reset_token", "assistant_id"],
@@ -71,37 +74,35 @@ export default {
     isChatterwilly() {
       return this.assistant_id === "chatterwilly";
     },
+    userAvatarSrc() {
+      return CHATTERWILLY_USER_AVATAR;
+    },
+    botAvatarSrc() {
+      return this.assistant_id === "diego"
+        ? userAvatar
+        : CHATTERWILLY_BOT_AVATAR;
+    },
     resetMessages() {
       this.messages = [];
-      this.messagesBot = [];
       this.id = 0;
       this.showTyping = false;
-    },
-    renderBotMessage(message: ChatBubble) {
-      if (typeof message.message === "string" && message.message.trim()) {
-        return message.message;
-      }
-
-      if (Array.isArray(message.messages) && message.messages.length > 0) {
-        return message.messages.join("\n");
-      }
-
-      return "";
     },
     hydrateHistoryMessages(historyMessages: HistoryMessage[]) {
       historyMessages.forEach((element) => {
         if (element.user === "user") {
           const message: ChatBubble = {
             id: this.id++,
-            message: String(element.message),
+            role: "user",
+            text: String(element.message),
           };
           this.messages.push(message);
         } else {
           const messageBot: ChatBubble = {
             id: this.id++,
-            messages: Array.isArray(element.message)
-              ? element.message
-              : [String(element.message)],
+            role: "bot",
+            text: Array.isArray(element.message)
+              ? element.message.map((entry) => String(entry)).join("\n")
+              : String(element.message),
           };
           this.messages.push(messageBot);
         }
@@ -125,23 +126,26 @@ export default {
       this.showTyping = true;
       let message = {
         id: this.id++,
-        message: messageWrite,
+        role: "user",
+        text: messageWrite,
       };
       this.messages.push(message);
       this.scrollToBottom();
     });
 
     this.emitter.on("messagesSendBot", (messageWriteBot: BotMessagePayload) => {
-      const answerBot = this.isChatterwilly()
-        ? Array.isArray(messageWriteBot.answers)
-          ? messageWriteBot.answers
-          : []
-        : Array.isArray(messageWriteBot.answers)
-        ? messageWriteBot.answers
-        : [];
+      const botText = Array.isArray(messageWriteBot.answers)
+        ? messageWriteBot.answers.map((entry) => String(entry)).join("\n")
+        : String(
+            messageWriteBot.response ||
+              messageWriteBot.message ||
+              messageWriteBot.text ||
+              ""
+          );
       const messageBot: ChatBubble = {
         id: this.id++,
-        messages: answerBot.length > 0 ? answerBot : [""],
+        role: "bot",
+        text: botText,
       };
       this.messages.push(messageBot);
       this.showTyping = false;
@@ -151,9 +155,7 @@ export default {
   data() {
     return {
       mixAssetUrl: process.env.VUE_APP_ASSET_URL,
-      userAvatar,
       messages: [] as ChatBubble[],
-      messagesBot: [],
       id: 0,
       showTyping: false,
     };
