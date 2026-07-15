@@ -44,19 +44,21 @@ describe("MessagesChatComponent", () => {
 
     const wrappers = wrapper.findAll(".message-wrapper");
     expect(wrappers).toHaveLength(2);
-    expect(wrapper.find(".message-wrapper.user-message .msg_cotainer_send").text()).toBe(
-      "Hola"
-    );
+    expect(
+      wrapper.find(".message-wrapper.user-message .msg_cotainer_send").text()
+    ).toBe("Hola");
     expect(
       wrapper.find(".message-wrapper.user-message img").attributes("src")
     ).toBe(CHATTERWILLY_USER_AVATAR);
-    expect(wrapper.find(".message-wrapper.bot-message .msg_cotainer").text()).toBe(
-      "Respuesta 1"
-    );
+    expect(
+      wrapper.find(".message-wrapper.bot-message .msg_cotainer").text()
+    ).toBe("Respuesta 1");
     expect(
       wrapper.find(".message-wrapper.bot-message img").attributes("src")
     ).toBe(CHATTERWILLY_BOT_AVATAR);
-    expect(wrapper.find(".message-wrapper.user-message img").exists()).toBe(true);
+    expect(wrapper.find(".message-wrapper.user-message img").exists()).toBe(
+      true
+    );
     expect((wrapper.vm as { showTyping: boolean }).showTyping).toBe(false);
   });
 
@@ -120,12 +122,12 @@ describe("MessagesChatComponent", () => {
 
     await nextTick();
 
-    expect(wrapper.find(".message-wrapper.bot-message .msg_cotainer").text()).toBe(
-      "Respuesta de Diego"
-    );
-    expect(wrapper.find(".message-wrapper.user-message .msg_cotainer_send").text()).toBe(
-      "Hola"
-    );
+    expect(
+      wrapper.find(".message-wrapper.bot-message .msg_cotainer").text()
+    ).toBe("Respuesta de Diego");
+    expect(
+      wrapper.find(".message-wrapper.user-message .msg_cotainer_send").text()
+    ).toBe("Hola");
     expect(
       wrapper.find(".message-wrapper.user-message img").attributes("src")
     ).toBe(CHATTERWILLY_USER_AVATAR);
