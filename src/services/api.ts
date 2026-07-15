@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 
 export const normalizeApiBaseUrl = (value?: string) => {
   if (!value) return "";
@@ -6,7 +6,20 @@ export const normalizeApiBaseUrl = (value?: string) => {
   return value.replace(/\/+$/, "");
 };
 
-const instance = axios.create({
-  baseURL: normalizeApiBaseUrl(process.env.VUE_APP_BACK_URL) || undefined,
+export const DEFAULT_BACK_URL =
+  normalizeApiBaseUrl(process.env.VUE_APP_BACK_URL) ||
+  "https://chatterwily.diegoarturosilvarojas.ovh";
+const DEFAULT_CHATTERWILLY_BACK_URL =
+  "https://chatbot.diegoarturosilvarojas.ovh";
+
+export const CHATTERWILLY_BACK_URL =
+  normalizeApiBaseUrl(process.env.VUE_APP_CHATTERWILLY_BACK_URL) ||
+  DEFAULT_CHATTERWILLY_BACK_URL;
+
+export const backendApi: AxiosInstance = axios.create({
+  baseURL: `${DEFAULT_BACK_URL}/api`,
 });
-export default instance;
+
+export const chatterwillyApi: AxiosInstance = axios.create({
+  baseURL: CHATTERWILLY_BACK_URL,
+});
