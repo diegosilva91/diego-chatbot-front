@@ -9,7 +9,7 @@
               :alt="activeAssistant.name"
               class="rounded-circle user_img"
             />
-            <span class="online_icon" :class="{ offline: status_chat }"></span>
+            <span class="online_icon" :class="{ offline: !isOnline }"></span>
           </div>
           <div class="user_info">
             <h1>{{ activeAssistant.name }}</h1>
@@ -89,11 +89,10 @@ type AssistantConfig = {
 
 type ChatSessionResponse = {
   sessionToken?: string;
-  sessionId?: string;
   sessionID?: string;
   messages?: unknown[];
   status_message?: string;
-  status_chat?: boolean;
+  isOnline?: boolean;
 };
 
 const ASSISTANT_STORAGE_KEY = "diego-chatbot.assistant";
@@ -126,7 +125,7 @@ export default {
   },
   setup() {
     const status_message = ref("online");
-    const status_chat = ref(false);
+    const isOnline = ref(false);
     const sessionToken = ref("");
     const sessionId = ref("");
     const messages = ref<unknown[]>([]);
@@ -155,7 +154,7 @@ export default {
       sessionId.value = "";
       messages.value = [];
       status_message.value = selectedAssistant.description;
-      status_chat.value = false;
+      isOnline.value = false;
     };
 
     const loadChat = async () => {
@@ -167,16 +166,16 @@ export default {
         }
 
         sessionToken.value = response.sessionToken || "";
-        sessionId.value = response.sessionId || response.sessionID || "";
+        sessionId.value = response.sessionID || "";
         messages.value = Array.isArray(response.messages)
           ? response.messages
           : [];
         status_message.value =
           response.status_message || activeAssistant.value.description;
-        status_chat.value = Boolean(response.status_chat);
+        isOnline.value = Boolean(response.isOnline);
       } catch (error) {
         status_message.value = "offline";
-        status_chat.value = true;
+        isOnline.value = false;
       }
     };
 
@@ -207,7 +206,7 @@ export default {
       sessionToken,
       sessionId,
       messages,
-      status_chat,
+      isOnline,
       isTyping,
       assistantResetToken,
       handleMessageSent,

@@ -36,9 +36,9 @@ describe("chat store", () => {
     expect(backendApi.get).toHaveBeenCalledWith("/messages/recent");
     expect(result).toEqual({
       messages: [],
-      sessionId: "session-1",
+      sessionID: "session-1",
       sessionToken: "token-1",
-      status_chat: true,
+      isOnline: true,
       status_message: "online",
     });
   });

@@ -1,4 +1,4 @@
-import { shallowMount } from "@vue/test-utils";
+import { flushPromises, shallowMount } from "@vue/test-utils";
 import FormChatComponent from "@/components/FormChatComponent.vue";
 import { backendApi, chatterwillyApi } from "@/services/api";
 
@@ -18,7 +18,9 @@ describe("FormChatComponent", () => {
 
   it("posts to chatterwilly chat endpoint when the assistant is chatterwilly", async () => {
     (chatterwillyApi.post as jest.Mock).mockResolvedValue({
-      data: { text: "Hola desde chatterwilly" },
+      data: {
+        content: { text: "Hola desde chatterwilly" },
+      },
     });
 
     const wrapper = shallowMount(FormChatComponent, {
@@ -32,11 +34,13 @@ describe("FormChatComponent", () => {
 
     await wrapper.find("#InputQuestion").setValue("Hola");
     await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
 
     expect(chatterwillyApi.post).toHaveBeenCalledWith("/chat", {
       text: "Hola",
     });
     expect(backendApi.post).not.toHaveBeenCalled();
+    expect(wrapper.emitted("messagesent")).toEqual([[true], [false]]);
   });
 
   it("posts to the backend conversation endpoint when the assistant is diego", async () => {
@@ -44,7 +48,7 @@ describe("FormChatComponent", () => {
       data: {
         content: {
           sessionToken: "session-token",
-          sessionId: "session-id",
+          sessionID: "session-id",
           counters: 0,
         },
       },
@@ -61,6 +65,7 @@ describe("FormChatComponent", () => {
 
     await wrapper.find("#InputQuestion").setValue("Hola");
     await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
 
     expect(backendApi.post).toHaveBeenCalledWith("/conversation", {
       sessionToken: "session-token",
@@ -69,5 +74,6 @@ describe("FormChatComponent", () => {
       counters: "",
     });
     expect(chatterwillyApi.post).not.toHaveBeenCalled();
+    expect(wrapper.emitted("messagesent")).toEqual([[true], [false]]);
   });
 });
