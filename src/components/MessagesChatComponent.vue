@@ -1,16 +1,12 @@
 <template>
   <div class="card-body msg_card_body" ref="messagesContainer">
     <div v-for="message in messages" :key="message.id">
-      <div v-if="idSender === message.idSender">
-        <div
-          v-for="(msg, index) in orderMessages(message.messages || [])"
-          :key="index"
-          class="message-wrapper user-message"
-        >
-          <div class="msg_cotainer_send" v-html="msg"></div>
-          <div class="img_cont_msg">
-            <img :src="userAvatar" class="rounded-circle user_img_msg" />
-          </div>
+      <div v-if="message.message" class="message-wrapper user-message">
+        <div class="msg_cotainer_send">
+          {{ message.message }}
+        </div>
+        <div class="img_cont_msg">
+          <img :src="userAvatar" class="rounded-circle user_img_msg" />
         </div>
       </div>
 
@@ -22,7 +18,7 @@
           />
         </div>
         <div class="msg_cotainer">
-          {{ message.message }}
+          {{ renderBotMessage(message) }}
         </div>
       </div>
     </div>
@@ -50,13 +46,13 @@ type BotMessagePayload = {
 
 type ChatBubble = {
   id: number;
-  idSender: string | number;
+  idSender?: string | number;
   message?: string;
   messages?: unknown[];
 };
 
 export default {
-  props: ["history_messages", "reset_token"],
+  props: ["history_messages", "reset_token", "assistant_id"],
   watch: {
     history_messages: {
       handler(newMessages: HistoryMessage[]) {
@@ -72,12 +68,25 @@ export default {
     },
   },
   methods: {
+    isChatterwilly() {
+      return this.assistant_id === "chatterwilly";
+    },
     resetMessages() {
       this.messages = [];
       this.messagesBot = [];
       this.id = 0;
-      this.idSender = "";
       this.showTyping = false;
+    },
+    renderBotMessage(message: ChatBubble) {
+      if (typeof message.message === "string" && message.message.trim()) {
+        return message.message;
+      }
+
+      if (Array.isArray(message.messages) && message.messages.length > 0) {
+        return message.messages.join("\n");
+      }
+
+      return "";
     },
     hydrateHistoryMessages(historyMessages: HistoryMessage[]) {
       historyMessages.forEach((element) => {
@@ -85,7 +94,6 @@ export default {
           const message: ChatBubble = {
             id: this.id++,
             message: String(element.message),
-            idSender: this.id,
           };
           this.messages.push(message);
         } else {
@@ -94,15 +102,10 @@ export default {
             messages: Array.isArray(element.message)
               ? element.message
               : [String(element.message)],
-            idSender: element.sessionId,
           };
           this.messages.push(messageBot);
-          this.idSender = element.sessionId ? element.sessionId : "";
         }
       });
-    },
-    orderMessages(message: unknown[]) {
-      return message.map((element) => element);
     },
     scrollToBottom() {
       this.$nextTick(() => {
@@ -123,19 +126,22 @@ export default {
       let message = {
         id: this.id++,
         message: messageWrite,
-        idSender: this.id,
       };
       this.messages.push(message);
       this.scrollToBottom();
     });
 
     this.emitter.on("messagesSendBot", (messageWriteBot: BotMessagePayload) => {
-      this.idSender = messageWriteBot.sessionId || "";
-      let answerBot = messageWriteBot.answers;
+      const answerBot = this.isChatterwilly()
+        ? Array.isArray(messageWriteBot.answers)
+          ? messageWriteBot.answers
+          : []
+        : Array.isArray(messageWriteBot.answers)
+        ? messageWriteBot.answers
+        : [];
       const messageBot: ChatBubble = {
         id: this.id++,
-        messages: answerBot,
-        idSender: messageWriteBot.sessionId || "",
+        messages: answerBot.length > 0 ? answerBot : [""],
       };
       this.messages.push(messageBot);
       this.showTyping = false;
@@ -149,7 +155,6 @@ export default {
       messages: [] as ChatBubble[],
       messagesBot: [],
       id: 0,
-      idSender: "",
       showTyping: false,
     };
   },
@@ -212,6 +217,7 @@ export default {
   font-size: 0.9rem;
   line-height: 1.5;
   position: relative;
+  white-space: pre-line;
 }
 
 .msg_cotainer::before {

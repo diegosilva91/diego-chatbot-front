@@ -96,6 +96,32 @@ export default defineComponent({
       showSuggestions.value = false;
     };
 
+    const normalizeChatterwillyPayload = (data: unknown) => {
+      const outer = data as { content?: Record<string, unknown> } | null;
+      const content = outer?.content ?? (data as Record<string, unknown>) ?? {};
+      const responseText =
+        content.response ??
+        content.answer ??
+        content.message ??
+        content.text ??
+        "";
+
+      return {
+        sessionId:
+          content.sessionId ||
+          content.sessionID ||
+          content.sessionToken ||
+          sessionId.value ||
+          "",
+        answers: Array.isArray(content.answers)
+          ? content.answers
+          : responseText
+          ? [responseText]
+          : [],
+        raw: content as Record<string, unknown>,
+      };
+    };
+
     const sendAsk = async (e: Event) => {
       e.preventDefault();
       if (question.value.length === 0) return;
@@ -115,12 +141,27 @@ export default defineComponent({
               message: question.value,
               counters: counter.value,
             });
-        const payload = response.data?.content ?? response.data ?? {};
+        const rawResponse = response.data?.content ?? response.data ?? {};
+        const payload = isChatterwilly()
+          ? normalizeChatterwillyPayload(response.data)
+          : rawResponse;
+
         if (!isChatterwilly()) {
-          sessionToken.value =
-            payload.sessionToken || payload.session_token || "";
-          sessionId.value = payload.sessionId || payload.sessionID || "";
-          counter.value = payload.counters >= 1 ? payload.counters : "";
+          const raw = rawResponse as Record<string, unknown>;
+          const countersValue = raw?.counters;
+          const rawSessionToken =
+            (raw?.sessionToken as string) ||
+            (raw?.session_token as string) ||
+            "";
+          const rawSessionId =
+            (raw?.sessionId as string) || (raw?.sessionID as string) || "";
+
+          sessionToken.value = rawSessionToken;
+          sessionId.value = rawSessionId;
+          counter.value =
+            typeof countersValue === "number" && countersValue >= 1
+              ? String(countersValue)
+              : "";
         }
         emitter?.emit("messagesSendBot", payload);
         emit("messagesent", false);

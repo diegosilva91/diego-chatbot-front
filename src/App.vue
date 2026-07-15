@@ -56,6 +56,7 @@
         :reset_token="assistantResetToken"
         :session_token="sessionToken"
         :session_id="sessionId"
+        :assistant_id="activeAssistant.id"
       ></MessagesChatComponent>
       <FormChatComponent
         :session_id="sessionId"
